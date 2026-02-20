@@ -8,16 +8,38 @@ Minimal macOS calendar CLI built with Swift + EventKit.
 - Swift toolchain (SwiftPM)
 - Calendar access permission (prompted on first run)
 
-## Build
+## Install
+
+Build a release binary and copy it into a directory on your `PATH`:
 
 ```bash
-swift build
+swift build -c release
+mkdir -p "$HOME/.local/bin"
+cp .build/release/ical "$HOME/.local/bin/ical"
 ```
 
-## Run
+Optional system-wide install:
 
 ```bash
-swift run ical <command>
+sudo cp .build/release/ical /usr/local/bin/ical
+```
+
+If `~/.local/bin` is not on your `PATH`, add this to `~/.zshrc`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Then reload your shell:
+
+```bash
+source ~/.zshrc
+```
+
+Now you can run:
+
+```bash
+ical today
 ```
 
 ## Commands
@@ -25,9 +47,9 @@ swift run ical <command>
 ### List events
 
 ```bash
-swift run ical today
-swift run ical tomorrow
-swift run ical week
+ical today
+ical tomorrow
+ical week
 ```
 
 Output is sorted by start time with all-day events first. Empty fields are omitted. If no events exist, it prints `No events.`
@@ -35,12 +57,12 @@ Output is sorted by start time with all-day events first. Empty fields are omitt
 ### Add event
 
 ```bash
-swift run ical add \
-  --title "Meeting with Luke" \
+ical add \
+  --title "Meeting with Joe" \
   --start "today 14:00" \
   --end "today 15:00" \
   --calendar "Work" \
-  --location "Zoom" \
+  --location "Google Meet" \
   --notes "Discuss pricing"
 ```
 
@@ -59,19 +81,19 @@ Options:
 By ID:
 
 ```bash
-swift run ical remove --id "<event-id>"
+ical remove --id "<event-id>"
 ```
 
 Or by title + exact start:
 
 ```bash
-swift run ical remove --title "Meeting with Luke" --start "today 14:00" --calendar "Work"
+ical remove --title "Meeting with Luke" --start "today 14:00" --calendar "Work"
 ```
 
 ### Edit event
 
 ```bash
-swift run ical edit \
+ical edit \
   --id "<event-id>" \
   --title "Updated title" \
   --start "today 15:00" \
