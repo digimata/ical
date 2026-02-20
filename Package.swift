@@ -15,6 +15,10 @@ let package = Package(
             linkerSettings: [
                 .linkedFramework("EventKit")
             ]
+        ),
+        .testTarget(
+            name: "icalTests",
+            dependencies: ["ical"]
         )
     ]
 )
