@@ -1,10 +1,13 @@
 import Foundation
 
+/// Parses user-supplied date/time strings into `Date` values.
+/// Supports ISO 8601 formats, local datetime patterns (`yyyy-MM-dd HH:mm`), and relative expressions (`today 14:00`, `tomorrow 09:30`).
 struct DateInputParser {
     private let calendar: Calendar
     private let isoDateFormatters: [ISO8601DateFormatter]
     private let localDateTimeFormatters: [DateFormatter]
 
+    /// Creates a parser with the given calendar for date arithmetic.
     init(calendar: Calendar = .current) {
         self.calendar = calendar
 
@@ -35,6 +38,9 @@ struct DateInputParser {
         }
     }
 
+    /// Attempts to parse the input string, trying relative expressions first, then ISO 8601, then local datetime formats.
+    /// - Parameter input: A date/time string (e.g. `"2025-03-15T10:00"`, `"today 14:00"`).
+    /// - Returns: The parsed `Date`, or `nil` if no format matched.
     func parse(_ input: String) -> Date? {
         let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -57,6 +63,7 @@ struct DateInputParser {
         return nil
     }
 
+    /// Parses relative date expressions like `"today 14:00"` or `"tomorrow 09:30"`.
     private func parseRelative(_ input: String) -> Date? {
         let parts = input.split(
             maxSplits: 1,
@@ -92,6 +99,8 @@ struct DateInputParser {
         return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: targetDay)
     }
 
+    /// Parses an `"HH:mm"` string into hour and minute components.
+    /// - Returns: A `(hour, minute)` tuple, or `nil` if the format is invalid.
     private func parseHourMinute(_ input: String) -> (Int, Int)? {
         let parts = input.split(separator: ":")
 

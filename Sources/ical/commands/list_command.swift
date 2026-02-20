@@ -1,6 +1,9 @@
 import Foundation
 
 extension ICalApp {
+    /// Handles the `today`, `tomorrow`, and `week` subcommands by fetching and rendering events in the corresponding date range.
+    /// - Parameter command: The list-style command to execute.
+    /// - Returns: Exit code — `0` on success, `1` on error.
     func list(_ command: Command) -> Int32 {
         guard let dateInterval = dateInterval(for: command) else {
             fputs("Could not determine date range.\n", stderr)
@@ -12,6 +15,8 @@ extension ICalApp {
         return 0
     }
 
+    /// Computes the date interval for a list command (`today`, `tomorrow`, or `week`).
+    /// - Returns: The corresponding `DateInterval`, or `nil` for non-list commands.
     private func dateInterval(for command: Command) -> DateInterval? {
         let now = Date()
 

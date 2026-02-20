@@ -1,6 +1,10 @@
 import Foundation
 
+/// Parses raw CLI arguments into a structured `Command`.
 struct CommandParser {
+    /// Parses the given arguments array into a `ParseResult`.
+    /// - Parameter arguments: The full argument list including the executable name at index 0.
+    /// - Returns: A `.command` on success or `.error` with a user-facing message on failure.
     func parse(arguments: [String]) -> ParseResult {
         guard arguments.count >= 2 else {
             return .error(usageText)
@@ -57,6 +61,7 @@ struct CommandParser {
         }
     }
 
+    /// Parses `--key value` pairs from the argument list into `AddOptions`.
     private func parseAddOptions(_ arguments: [String]) -> Result<AddOptions, CLIError> {
         var title: String?
         var startInput: String?
@@ -163,6 +168,7 @@ struct CommandParser {
         )
     }
 
+    /// Parses `--key value` pairs from the argument list into `RemoveOptions`.
     private func parseRemoveOptions(_ arguments: [String]) -> Result<RemoveOptions, CLIError> {
         var id: String?
         var title: String?
@@ -252,6 +258,7 @@ struct CommandParser {
         )
     }
 
+    /// Parses `--key value` pairs from the argument list into `EditOptions`.
     private func parseEditOptions(_ arguments: [String]) -> Result<EditOptions, CLIError> {
         var id: String?
         var title: String?
@@ -407,6 +414,11 @@ struct CommandParser {
         )
     }
 
+    /// Advances past the current flag and collects all subsequent non-flag tokens as a single space-joined value.
+    /// - Parameters:
+    ///   - arguments: The full argument list.
+    ///   - index: The current position (pointing at the flag); updated to the next unprocessed position on return.
+    /// - Returns: The collected value, or `nil` if no tokens follow the flag.
     private func collectOptionValue(from arguments: [String], index: inout Int) -> String? {
         index += 1
         var chunks: [String] = []

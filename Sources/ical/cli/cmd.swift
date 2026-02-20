@@ -1,5 +1,6 @@
 import Foundation
 
+/// A parsed CLI command ready for dispatch.
 enum Command {
     case today
     case tomorrow
@@ -9,6 +10,7 @@ enum Command {
     case edit(EditOptions)
 }
 
+/// Options for the `add` subcommand.
 struct AddOptions {
     let title: String
     let startInput: String
@@ -19,6 +21,7 @@ struct AddOptions {
     let isAllDay: Bool
 }
 
+/// Options for the `remove` subcommand. Events can be targeted by `id` or by `title`+`start`.
 struct RemoveOptions {
     let id: String?
     let title: String?
@@ -26,6 +29,7 @@ struct RemoveOptions {
     let calendarName: String?
 }
 
+/// Options for the `edit` subcommand. Only non-nil fields are applied as updates.
 struct EditOptions {
     let id: String
     let title: String?
@@ -40,6 +44,7 @@ struct EditOptions {
     let clearNotes: Bool
 }
 
+/// The result of parsing CLI arguments — either a valid command or an error message.
 enum ParseResult {
     case command(Command)
     case error(String)

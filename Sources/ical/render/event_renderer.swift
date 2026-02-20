@@ -1,6 +1,7 @@
 import EventKit
 import Foundation
 
+/// Formats and prints calendar events to stdout.
 struct EventRenderer {
     private let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -9,6 +10,8 @@ struct EventRenderer {
         return formatter
     }()
 
+    /// Prints a list of events to stdout. Shows time range (or "ALL DAY"), calendar name, location, and notes for each event.
+    /// - Parameter events: The events to render (assumed to be pre-sorted).
     func render(events: [EKEvent]) {
         guard !events.isEmpty else {
             print("No events.")

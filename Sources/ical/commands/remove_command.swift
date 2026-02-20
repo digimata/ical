@@ -2,6 +2,9 @@ import EventKit
 import Foundation
 
 extension ICalApp {
+    /// Handles the `remove` subcommand — deletes a calendar event.
+    /// - Parameter options: Parsed remove options (by id or title+start selector).
+    /// - Returns: Exit code — `0` on success, `1` on error.
     func remove(_ options: RemoveOptions) -> Int32 {
         switch removeEvent(with: options) {
         case .success:
@@ -14,6 +17,8 @@ extension ICalApp {
         }
     }
 
+    /// Resolves the target event by ID or title+start selector and removes it from EventKit.
+    /// Fails if zero or multiple events match a title+start selector.
     private func removeEvent(with options: RemoveOptions) -> Result<Void, CLIError> {
         if let id = options.id {
             guard let event = store.event(withIdentifier: id) else {
@@ -72,6 +77,7 @@ extension ICalApp {
         return removeEvent(matches[0])
     }
 
+    /// Deletes a single event from the event store.
     private func removeEvent(_ event: EKEvent) -> Result<Void, CLIError> {
         do {
             try store.remove(event, span: .thisEvent, commit: true)

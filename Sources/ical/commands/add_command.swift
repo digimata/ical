@@ -2,6 +2,9 @@ import EventKit
 import Foundation
 
 extension ICalApp {
+    /// Handles the `add` subcommand — creates a new calendar event.
+    /// - Parameter options: Parsed add options (title, start, end, etc.).
+    /// - Returns: Exit code — `0` on success, `1` on error.
     func add(_ options: AddOptions) -> Int32 {
         switch createEvent(with: options) {
         case .success(let identifier):
@@ -17,6 +20,8 @@ extension ICalApp {
         }
     }
 
+    /// Validates dates, resolves the target calendar, and saves a new event to EventKit.
+    /// - Returns: The new event's identifier on success, or a `CLIError` on failure.
     private func createEvent(with options: AddOptions) -> Result<String?, CLIError> {
         guard let rawStartDate = dateParser.parse(options.startInput) else {
             return .failure(.message("Could not parse --start value: \(options.startInput)"))

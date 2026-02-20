@@ -2,6 +2,9 @@ import EventKit
 import Foundation
 
 extension ICalApp {
+    /// Synchronously requests full calendar access from EventKit.
+    /// Uses `requestFullAccessToEvents` on macOS 14+ and falls back to `requestAccess(to:)` on older versions.
+    /// - Returns: `true` if access was granted, `false` otherwise.
     func requestAccess() -> Bool {
         let semaphore = DispatchSemaphore(value: 0)
         var accessGranted = false
@@ -22,6 +25,9 @@ extension ICalApp {
         return accessGranted
     }
 
+    /// Fetches all events within the given date interval, sorted by all-day status, start time, end time, then title.
+    /// - Parameter dateInterval: The time range to query.
+    /// - Returns: A sorted array of matching events.
     func fetchEvents(in dateInterval: DateInterval) -> [EKEvent] {
         let predicate = store.predicateForEvents(
             withStart: dateInterval.start,
@@ -46,6 +52,9 @@ extension ICalApp {
         }
     }
 
+    /// Resolves a writable calendar by name, falling back to the first writable calendar if no name is given.
+    /// - Parameter name: Optional calendar name (case-insensitive match).
+    /// - Returns: The matched `EKCalendar`, or a `CLIError` if none found.
     func writableCalendar(named name: String?) -> Result<EKCalendar, CLIError> {
         let writableCalendars = store.calendars(for: .event).filter { $0.allowsContentModifications }
 
@@ -67,6 +76,7 @@ extension ICalApp {
         return .failure(.message("Calendar not found: \(name). Writable calendars: \(available)"))
     }
 
+    /// Returns the full-day interval (midnight to midnight) containing the given date.
     func dayInterval(containing date: Date) -> DateInterval? {
         let start = calendar.startOfDay(for: date)
         guard let end = calendar.date(byAdding: .day, value: 1, to: start) else {
