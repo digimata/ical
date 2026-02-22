@@ -34,10 +34,24 @@ final class DateInputParserTests: XCTestCase {
         XCTAssertNotNil(parsed)
     }
 
+    func testParsesISODateTimeWithoutTimezonePreservingOrder() throws {
+        let parser = DateInputParser()
+        let start = try XCTUnwrap(parser.parse("2026-02-22T10:00:00"))
+        let end = try XCTUnwrap(parser.parse("2026-02-22T10:30:00"))
+        XCTAssertLessThan(start, end)
+    }
+
     func testParsesLocalDateTime() {
         let parser = DateInputParser()
         let parsed = parser.parse("2026-02-20 14:00")
         XCTAssertNotNil(parsed)
+    }
+
+    func testParsesLocalDateTimePreservingOrder() throws {
+        let parser = DateInputParser()
+        let start = try XCTUnwrap(parser.parse("2026-02-22 10:00"))
+        let end = try XCTUnwrap(parser.parse("2026-02-22 10:30"))
+        XCTAssertLessThan(start, end)
     }
 
     func testRejectsInvalidTimeInput() {

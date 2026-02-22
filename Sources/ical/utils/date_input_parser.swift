@@ -6,6 +6,7 @@ struct DateInputParser {
     private let calendar: Calendar
     private let isoDateFormatters: [ISO8601DateFormatter]
     private let localDateTimeFormatters: [DateFormatter]
+    private let isoFullDateFormatter: ISO8601DateFormatter
 
     /// Creates a parser with the given calendar for date arithmetic.
     init(calendar: Calendar = .current) {
@@ -20,7 +21,8 @@ struct DateInputParser {
         let fullDate = ISO8601DateFormatter()
         fullDate.formatOptions = [.withFullDate]
 
-        self.isoDateFormatters = [withFractionalSeconds, internetDateTime, fullDate]
+        self.isoDateFormatters = [withFractionalSeconds, internetDateTime]
+        self.isoFullDateFormatter = fullDate
 
         let patterns = [
             "yyyy-MM-dd'T'HH:mm",
@@ -58,6 +60,10 @@ struct DateInputParser {
             if let date = formatter.date(from: value) {
                 return date
             }
+        }
+
+        if isDateOnly(value), let date = isoFullDateFormatter.date(from: value) {
+            return date
         }
 
         return nil
@@ -115,5 +121,9 @@ struct DateInputParser {
         }
 
         return (hour, minute)
+    }
+
+    private func isDateOnly(_ input: String) -> Bool {
+        input.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil
     }
 }
