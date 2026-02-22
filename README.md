@@ -44,6 +44,13 @@ ical today
 
 ## Commands
 
+### Version
+
+```bash
+ical version
+ical --version
+```
+
 ### List events
 
 ```bash

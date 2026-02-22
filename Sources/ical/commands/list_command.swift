@@ -41,7 +41,7 @@ extension ICalApp {
         case .week:
             return calendar.dateInterval(of: .weekOfYear, for: now)
 
-        case .add, .remove, .edit:
+        case .version, .add, .remove, .edit:
             return nil
         }
     }

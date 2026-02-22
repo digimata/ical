@@ -2,6 +2,8 @@ import Foundation
 
 let usageText = """
 Usage:
+  ical version
+  ical --version
   ical today
   ical tomorrow
   ical week

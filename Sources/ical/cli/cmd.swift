@@ -2,6 +2,7 @@ import Foundation
 
 /// A parsed CLI command ready for dispatch.
 enum Command {
+    case version
     case today
     case tomorrow
     case week

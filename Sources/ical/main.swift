@@ -36,12 +36,19 @@ struct ICalApp {
             return 1
 
         case .command(let command):
+            if case .version = command {
+                print("ical \(appVersion)")
+                return 0
+            }
+
             guard requestAccess() else {
                 fputs("Calendar access denied.\n", stderr)
                 return 1
             }
 
             switch command {
+            case .version:
+                return 0
             case .today, .tomorrow, .week:
                 return list(command)
             case .add(let options):

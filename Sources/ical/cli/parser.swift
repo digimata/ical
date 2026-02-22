@@ -14,6 +14,12 @@ struct CommandParser {
         let remaining = Array(arguments.dropFirst(2))
 
         switch subcommand {
+        case "version", "--version", "-v":
+            guard remaining.isEmpty else {
+                return .error("Unexpected arguments for 'version'.\n\n\(usageText)")
+            }
+            return .command(.version)
+
         case "today":
             guard remaining.isEmpty else {
                 return .error("Unexpected arguments for 'today'.\n\n\(usageText)")

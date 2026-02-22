@@ -2,6 +2,28 @@ import XCTest
 @testable import ical
 
 final class CommandParserTests: XCTestCase {
+    func testParsesVersionCommand() {
+        let result = CommandParser().parse(arguments: ["ical", "version"])
+
+        switch result {
+        case .command(.version):
+            break
+        default:
+            XCTFail("Expected version command")
+        }
+    }
+
+    func testParsesVersionFlag() {
+        let result = CommandParser().parse(arguments: ["ical", "--version"])
+
+        switch result {
+        case .command(.version):
+            break
+        default:
+            XCTFail("Expected version command")
+        }
+    }
+
     func testParsesTodayCommand() {
         let result = CommandParser().parse(arguments: ["ical", "today"])
 
