@@ -25,7 +25,7 @@ extension ICalApp {
                 return .failure(.message("Event not found for id: \(id)"))
             }
 
-            return removeEvent(event)
+            return removeEvent(event, selection: options.recurrenceSpan)
         }
 
         guard let title = options.title, let startInput = options.startInput else {
@@ -74,13 +74,21 @@ extension ICalApp {
                 ))
         }
 
-        return removeEvent(matches[0])
+        return removeEvent(matches[0], selection: options.recurrenceSpan)
     }
 
     /// Deletes a single event from the event store.
-    private func removeEvent(_ event: EKEvent) -> Result<Void, CLIError> {
+    private func removeEvent(_ event: EKEvent, selection: RecurrenceSpanSelection) -> Result<Void, CLIError> {
+        let removeSpan: EKSpan
+        switch saveSpan(isRecurring: isRecurringEvent(event), selection: selection) {
+        case .success(let span):
+            removeSpan = span
+        case .failure(let error):
+            return .failure(error)
+        }
+
         do {
-            try store.remove(event, span: .thisEvent, commit: true)
+            try store.remove(event, span: removeSpan, commit: true)
             return .success(())
         } catch {
             return .failure(.message("Failed to remove event: \(error.localizedDescription)"))

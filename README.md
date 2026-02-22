@@ -64,6 +64,13 @@ ical add \
   --calendar "Work" \
   --location "Google Meet" \
   --notes "Discuss pricing"
+
+ical add \
+  --title "Morning Brief" \
+  --start "tomorrow 10:00" \
+  --end "tomorrow 10:30" \
+  --recurrence daily \
+  --recurrence-end "2026-03-31"
 ```
 
 Options:
@@ -75,6 +82,8 @@ Options:
 - `--location <text>` (optional)
 - `--notes <text>` (optional)
 - `--all-day` (optional)
+- `--recurrence <daily|weekly|monthly|yearly>` (optional)
+- `--recurrence-end <date>` (optional, requires `--recurrence`)
 
 ### Remove event
 
@@ -82,6 +91,9 @@ By ID:
 
 ```bash
 ical remove --id "<event-id>"
+
+ical remove --id "<event-id>" --this-only
+ical remove --id "<event-id>" --all-future
 ```
 
 Or by title + exact start:
@@ -89,6 +101,8 @@ Or by title + exact start:
 ```bash
 ical remove --title "Meeting with Luke" --start "today 14:00" --calendar "Work"
 ```
+
+For recurring events, use `--this-only` or `--all-future` to choose how removal is applied.
 
 ### Edit event
 
@@ -108,6 +122,10 @@ Edit supports these optional flags:
 - `--all-day` or `--timed`
 - `--clear-location`
 - `--clear-notes`
+- `--recurrence <daily|weekly|monthly|yearly>`
+- `--recurrence-end <date>` (requires `--recurrence`)
+- `--clear-recurrence`
+- `--this-only` or `--all-future` (required when editing a recurring event)
 
 ## Datetime formats
 

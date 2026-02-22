@@ -70,6 +70,15 @@ extension ICalApp {
         event.notes = options.notes
         event.isAllDay = options.isAllDay
 
+        if let recurrencePattern = options.recurrencePattern {
+            switch recurrenceRule(pattern: recurrencePattern, endInput: options.recurrenceEndInput) {
+            case .success(let rule):
+                event.recurrenceRules = [rule]
+            case .failure(let error):
+                return .failure(error)
+            }
+        }
+
         do {
             try store.save(event, span: .thisEvent, commit: true)
             return .success(event.eventIdentifier)

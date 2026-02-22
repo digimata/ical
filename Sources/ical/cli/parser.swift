@@ -70,6 +70,8 @@ struct CommandParser {
         var location: String?
         var notes: String?
         var isAllDay = false
+        var recurrencePattern: RecurrencePattern?
+        var recurrenceEndInput: String?
 
         var index = 0
         while index < arguments.count {
@@ -138,6 +140,30 @@ struct CommandParser {
                 isAllDay = true
                 index += 1
 
+            case "--recurrence":
+                guard recurrencePattern == nil else {
+                    return .failure(.message("Duplicate option: --recurrence"))
+                }
+                guard let value = collectOptionValue(from: arguments, index: &index), let finalValue = nonEmpty(value) else {
+                    return .failure(.message("Missing value for --recurrence"))
+                }
+                guard let parsedPattern = parseRecurrencePattern(finalValue) else {
+                    return .failure(
+                        .message(
+                            "Invalid value for --recurrence: \(finalValue). Expected daily, weekly, monthly, or yearly."
+                        ))
+                }
+                recurrencePattern = parsedPattern
+
+            case "--recurrence-end":
+                guard recurrenceEndInput == nil else {
+                    return .failure(.message("Duplicate option: --recurrence-end"))
+                }
+                guard let value = collectOptionValue(from: arguments, index: &index), let finalValue = nonEmpty(value) else {
+                    return .failure(.message("Missing value for --recurrence-end"))
+                }
+                recurrenceEndInput = finalValue
+
             default:
                 return .failure(.message("Unknown option: \(token)"))
             }
@@ -155,6 +181,10 @@ struct CommandParser {
             return .failure(.message("Missing required option: --end"))
         }
 
+        guard recurrencePattern != nil || recurrenceEndInput == nil else {
+            return .failure(.message("--recurrence-end requires --recurrence."))
+        }
+
         return .success(
             AddOptions(
                 title: finalTitle,
@@ -163,7 +193,9 @@ struct CommandParser {
                 calendarName: nonEmpty(calendarName),
                 location: nonEmpty(location),
                 notes: nonEmpty(notes),
-                isAllDay: isAllDay
+                isAllDay: isAllDay,
+                recurrencePattern: recurrencePattern,
+                recurrenceEndInput: recurrenceEndInput
             )
         )
     }
@@ -174,6 +206,8 @@ struct CommandParser {
         var title: String?
         var startInput: String?
         var calendarName: String?
+        var thisOnly = false
+        var allFuture = false
 
         var index = 0
         while index < arguments.count {
@@ -220,9 +254,30 @@ struct CommandParser {
                 }
                 calendarName = finalValue
 
+            case "--this-only":
+                thisOnly = true
+                index += 1
+
+            case "--all-future":
+                allFuture = true
+                index += 1
+
             default:
                 return .failure(.message("Unknown option: \(token)"))
             }
+        }
+
+        guard !(thisOnly && allFuture) else {
+            return .failure(.message("--this-only and --all-future cannot be used together."))
+        }
+
+        let recurrenceSpan: RecurrenceSpanSelection
+        if thisOnly {
+            recurrenceSpan = .thisOnly
+        } else if allFuture {
+            recurrenceSpan = .allFuture
+        } else {
+            recurrenceSpan = .automatic
         }
 
         if let id {
@@ -235,7 +290,8 @@ struct CommandParser {
                     id: id,
                     title: nil,
                     startInput: nil,
-                    calendarName: nil
+                    calendarName: nil,
+                    recurrenceSpan: recurrenceSpan
                 )
             )
         }
@@ -253,7 +309,8 @@ struct CommandParser {
                 id: nil,
                 title: title,
                 startInput: startInput,
-                calendarName: calendarName
+                calendarName: calendarName,
+                recurrenceSpan: recurrenceSpan
             )
         )
     }
@@ -271,6 +328,11 @@ struct CommandParser {
         var makeTimed = false
         var clearLocation = false
         var clearNotes = false
+        var recurrencePattern: RecurrencePattern?
+        var recurrenceEndInput: String?
+        var clearRecurrence = false
+        var thisOnly = false
+        var allFuture = false
 
         var index = 0
         while index < arguments.count {
@@ -360,6 +422,42 @@ struct CommandParser {
                 clearNotes = true
                 index += 1
 
+            case "--recurrence":
+                guard recurrencePattern == nil else {
+                    return .failure(.message("Duplicate option: --recurrence"))
+                }
+                guard let value = collectOptionValue(from: arguments, index: &index), let finalValue = nonEmpty(value) else {
+                    return .failure(.message("Missing value for --recurrence"))
+                }
+                guard let parsedPattern = parseRecurrencePattern(finalValue) else {
+                    return .failure(
+                        .message(
+                            "Invalid value for --recurrence: \(finalValue). Expected daily, weekly, monthly, or yearly."
+                        ))
+                }
+                recurrencePattern = parsedPattern
+
+            case "--recurrence-end":
+                guard recurrenceEndInput == nil else {
+                    return .failure(.message("Duplicate option: --recurrence-end"))
+                }
+                guard let value = collectOptionValue(from: arguments, index: &index), let finalValue = nonEmpty(value) else {
+                    return .failure(.message("Missing value for --recurrence-end"))
+                }
+                recurrenceEndInput = finalValue
+
+            case "--clear-recurrence":
+                clearRecurrence = true
+                index += 1
+
+            case "--this-only":
+                thisOnly = true
+                index += 1
+
+            case "--all-future":
+                allFuture = true
+                index += 1
+
             default:
                 return .failure(.message("Unknown option: \(token)"))
             }
@@ -381,6 +479,27 @@ struct CommandParser {
             return .failure(.message("Use either --notes or --clear-notes, not both."))
         }
 
+        guard recurrencePattern != nil || recurrenceEndInput == nil else {
+            return .failure(.message("--recurrence-end requires --recurrence."))
+        }
+
+        guard !(clearRecurrence && recurrencePattern != nil) else {
+            return .failure(.message("Use either --recurrence or --clear-recurrence, not both."))
+        }
+
+        guard !(thisOnly && allFuture) else {
+            return .failure(.message("--this-only and --all-future cannot be used together."))
+        }
+
+        let recurrenceSpan: RecurrenceSpanSelection
+        if thisOnly {
+            recurrenceSpan = .thisOnly
+        } else if allFuture {
+            recurrenceSpan = .allFuture
+        } else {
+            recurrenceSpan = .automatic
+        }
+
         let hasUpdate =
             title != nil ||
             startInput != nil ||
@@ -391,7 +510,9 @@ struct CommandParser {
             makeAllDay ||
             makeTimed ||
             clearLocation ||
-            clearNotes
+            clearNotes ||
+            recurrencePattern != nil ||
+            clearRecurrence
 
         guard hasUpdate else {
             return .failure(.message("No changes provided."))
@@ -409,9 +530,18 @@ struct CommandParser {
                 makeAllDay: makeAllDay,
                 makeTimed: makeTimed,
                 clearLocation: clearLocation,
-                clearNotes: clearNotes
+                clearNotes: clearNotes,
+                recurrencePattern: recurrencePattern,
+                recurrenceEndInput: recurrenceEndInput,
+                clearRecurrence: clearRecurrence,
+                recurrenceSpan: recurrenceSpan
             )
         )
+    }
+
+    /// Parses recurrence option values (`daily`, `weekly`, `monthly`, `yearly`).
+    private func parseRecurrencePattern(_ value: String) -> RecurrencePattern? {
+        RecurrencePattern(rawValue: value.lowercased())
     }
 
     /// Advances past the current flag and collects all subsequent non-flag tokens as a single space-joined value.

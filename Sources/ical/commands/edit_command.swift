@@ -1,3 +1,4 @@
+import EventKit
 import Foundation
 
 extension ICalApp {
@@ -26,6 +27,8 @@ extension ICalApp {
             return .failure(.message("Event not found for id: \(options.id)"))
         }
 
+        let wasRecurring = isRecurringEvent(event)
+
         if let title = options.title {
             event.title = title
         }
@@ -53,6 +56,19 @@ extension ICalApp {
 
         if options.clearNotes {
             event.notes = nil
+        }
+
+        if let recurrencePattern = options.recurrencePattern {
+            switch recurrenceRule(pattern: recurrencePattern, endInput: options.recurrenceEndInput) {
+            case .success(let rule):
+                event.recurrenceRules = [rule]
+            case .failure(let error):
+                return .failure(error)
+            }
+        }
+
+        if options.clearRecurrence {
+            event.recurrenceRules = nil
         }
 
         guard let originalStartDate = event.startDate, let originalEndDate = event.endDate else {
@@ -105,8 +121,16 @@ extension ICalApp {
         event.startDate = startDate
         event.endDate = endDate
 
+        let saveSpanValue: EKSpan
+        switch saveSpan(isRecurring: wasRecurring, selection: options.recurrenceSpan) {
+        case .success(let span):
+            saveSpanValue = span
+        case .failure(let error):
+            return .failure(error)
+        }
+
         do {
-            try store.save(event, span: .thisEvent, commit: true)
+            try store.save(event, span: saveSpanValue, commit: true)
             return .success(event.eventIdentifier)
         } catch {
             return .failure(.message("Failed to update event: \(error.localizedDescription)"))

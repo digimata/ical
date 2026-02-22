@@ -34,8 +34,46 @@ final class CommandParserTests: XCTestCase {
             XCTAssertEqual(options.location, "Zoom Room A")
             XCTAssertEqual(options.notes, "Discuss pricing")
             XCTAssertTrue(options.isAllDay)
+            XCTAssertNil(options.recurrencePattern)
+            XCTAssertNil(options.recurrenceEndInput)
         default:
             XCTFail("Expected add command")
+        }
+    }
+
+    func testParsesAddCommandWithRecurrence() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "add",
+            "--title", "Morning", "Brief",
+            "--start", "tomorrow", "10:00",
+            "--end", "tomorrow", "10:30",
+            "--recurrence", "weekly",
+            "--recurrence-end", "2026-03-31"
+        ])
+
+        switch result {
+        case .command(.add(let options)):
+            XCTAssertEqual(options.recurrencePattern, .weekly)
+            XCTAssertEqual(options.recurrenceEndInput, "2026-03-31")
+        default:
+            XCTFail("Expected add command with recurrence")
+        }
+    }
+
+    func testAddRejectsRecurrenceEndWithoutRecurrence() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "add",
+            "--title", "Morning", "Brief",
+            "--start", "tomorrow", "10:00",
+            "--end", "tomorrow", "10:30",
+            "--recurrence-end", "2026-03-31"
+        ])
+
+        switch result {
+        case .error(let message):
+            XCTAssertTrue(message.contains("--recurrence-end requires --recurrence."))
+        default:
+            XCTFail("Expected parse error")
         }
     }
 
@@ -50,6 +88,74 @@ final class CommandParserTests: XCTestCase {
         switch result {
         case .error(let message):
             XCTAssertTrue(message.contains("Use either --id or --title/--start selector, not both."))
+        default:
+            XCTFail("Expected parse error")
+        }
+    }
+
+    func testRemoveParsesAllFutureSpan() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "remove",
+            "--id", "abc",
+            "--all-future"
+        ])
+
+        switch result {
+        case .command(.remove(let options)):
+            XCTAssertEqual(options.id, "abc")
+            XCTAssertEqual(options.recurrenceSpan, .allFuture)
+        default:
+            XCTFail("Expected remove command")
+        }
+    }
+
+    func testRemoveRejectsConflictingSpanFlags() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "remove",
+            "--id", "abc",
+            "--this-only",
+            "--all-future"
+        ])
+
+        switch result {
+        case .error(let message):
+            XCTAssertTrue(message.contains("--this-only and --all-future cannot be used together."))
+        default:
+            XCTFail("Expected parse error")
+        }
+    }
+
+    func testParsesEditRecurrenceAndSpan() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "edit",
+            "--id", "abc",
+            "--recurrence", "monthly",
+            "--recurrence-end", "2026-12-31",
+            "--all-future"
+        ])
+
+        switch result {
+        case .command(.edit(let options)):
+            XCTAssertEqual(options.recurrencePattern, .monthly)
+            XCTAssertEqual(options.recurrenceEndInput, "2026-12-31")
+            XCTAssertEqual(options.recurrenceSpan, .allFuture)
+            XCTAssertFalse(options.clearRecurrence)
+        default:
+            XCTFail("Expected edit command")
+        }
+    }
+
+    func testEditRejectsRecurrenceAndClearRecurrence() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "edit",
+            "--id", "abc",
+            "--recurrence", "daily",
+            "--clear-recurrence"
+        ])
+
+        switch result {
+        case .error(let message):
+            XCTAssertTrue(message.contains("Use either --recurrence or --clear-recurrence, not both."))
         default:
             XCTFail("Expected parse error")
         }
