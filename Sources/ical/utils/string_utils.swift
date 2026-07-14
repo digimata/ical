@@ -15,3 +15,8 @@ func nonEmpty(_ value: String?) -> String? {
 func eventTitle(_ event: EKEvent) -> String {
     nonEmpty(event.title) ?? "(No Title)"
 }
+
+/// Returns the reminder's title, falling back to `"(No Title)"` if blank or nil.
+func reminderTitle(_ reminder: EKReminder) -> String {
+    nonEmpty(reminder.title) ?? "(No Title)"
+}

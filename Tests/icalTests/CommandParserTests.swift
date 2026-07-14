@@ -196,4 +196,188 @@ final class CommandParserTests: XCTestCase {
             XCTFail("Expected parse error")
         }
     }
+
+    func testParsesBareRemindersAsList() {
+        let result = CommandParser().parse(arguments: ["ical", "reminders"])
+
+        switch result {
+        case .command(.reminders(.list(let options))):
+            XCTAssertFalse(options.includeCompleted)
+            XCTAssertNil(options.listName)
+        default:
+            XCTFail("Expected reminders list command")
+        }
+    }
+
+    func testParsesRemindersListWithOptions() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "reminders", "list",
+            "--all",
+            "--list", "Groceries"
+        ])
+
+        switch result {
+        case .command(.reminders(.list(let options))):
+            XCTAssertTrue(options.includeCompleted)
+            XCTAssertEqual(options.listName, "Groceries")
+        default:
+            XCTFail("Expected reminders list command")
+        }
+    }
+
+    func testParsesRemindersAddWithMultiWordValues() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "reminders", "add",
+            "--title", "Buy", "oat", "milk",
+            "--due", "tomorrow", "09:00",
+            "--list", "Groceries",
+            "--notes", "The", "barista", "kind",
+            "--priority", "1"
+        ])
+
+        switch result {
+        case .command(.reminders(.add(let options))):
+            XCTAssertEqual(options.title, "Buy oat milk")
+            XCTAssertEqual(options.dueInput, "tomorrow 09:00")
+            XCTAssertEqual(options.listName, "Groceries")
+            XCTAssertEqual(options.notes, "The barista kind")
+            XCTAssertEqual(options.priority, 1)
+        default:
+            XCTFail("Expected reminders add command")
+        }
+    }
+
+    func testRemindersAddRequiresTitle() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "reminders", "add",
+            "--due", "tomorrow", "09:00"
+        ])
+
+        switch result {
+        case .error(let message):
+            XCTAssertTrue(message.contains("Missing required option: --title"))
+        default:
+            XCTFail("Expected parse error")
+        }
+    }
+
+    func testRemindersAddRejectsInvalidPriority() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "reminders", "add",
+            "--title", "Task",
+            "--priority", "12"
+        ])
+
+        switch result {
+        case .error(let message):
+            XCTAssertTrue(message.contains("Invalid value for --priority: 12"))
+        default:
+            XCTFail("Expected parse error")
+        }
+    }
+
+    func testParsesRemindersDoneByTitle() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "reminders", "done",
+            "--title", "Buy", "oat", "milk"
+        ])
+
+        switch result {
+        case .command(.reminders(.done(.title(let title)))):
+            XCTAssertEqual(title, "Buy oat milk")
+        default:
+            XCTFail("Expected reminders done command")
+        }
+    }
+
+    func testRemindersDoneRejectsMixedSelectors() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "reminders", "done",
+            "--id", "abc",
+            "--title", "Task"
+        ])
+
+        switch result {
+        case .error(let message):
+            XCTAssertTrue(message.contains("Use either --id or --title, not both."))
+        default:
+            XCTFail("Expected parse error")
+        }
+    }
+
+    func testParsesRemindersRemoveById() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "reminders", "remove",
+            "--id", "abc"
+        ])
+
+        switch result {
+        case .command(.reminders(.remove(.id(let id)))):
+            XCTAssertEqual(id, "abc")
+        default:
+            XCTFail("Expected reminders remove command")
+        }
+    }
+
+    func testParsesRemindersEdit() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "reminders", "edit",
+            "--id", "abc",
+            "--title", "Renamed",
+            "--clear-due",
+            "--priority", "5"
+        ])
+
+        switch result {
+        case .command(.reminders(.edit(let options))):
+            XCTAssertEqual(options.id, "abc")
+            XCTAssertEqual(options.title, "Renamed")
+            XCTAssertTrue(options.clearDue)
+            XCTAssertEqual(options.priority, 5)
+            XCTAssertNil(options.dueInput)
+        default:
+            XCTFail("Expected reminders edit command")
+        }
+    }
+
+    func testRemindersEditRejectsDueAndClearDue() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "reminders", "edit",
+            "--id", "abc",
+            "--due", "tomorrow", "09:00",
+            "--clear-due"
+        ])
+
+        switch result {
+        case .error(let message):
+            XCTAssertTrue(message.contains("Use either --due or --clear-due, not both."))
+        default:
+            XCTFail("Expected parse error")
+        }
+    }
+
+    func testRemindersEditRequiresAtLeastOneChange() {
+        let result = CommandParser().parse(arguments: [
+            "ical", "reminders", "edit",
+            "--id", "abc"
+        ])
+
+        switch result {
+        case .error(let message):
+            XCTAssertTrue(message.contains("No changes provided."))
+        default:
+            XCTFail("Expected parse error")
+        }
+    }
+
+    func testRemindersRejectsUnknownSubcommand() {
+        let result = CommandParser().parse(arguments: ["ical", "reminders", "snooze"])
+
+        switch result {
+        case .error(let message):
+            XCTAssertTrue(message.contains("Unknown reminders command: snooze"))
+        default:
+            XCTFail("Expected parse error")
+        }
+    }
 }

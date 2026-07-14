@@ -9,6 +9,50 @@ enum Command {
     case add(AddOptions)
     case remove(RemoveOptions)
     case edit(EditOptions)
+    case reminders(RemindersCommand)
+}
+
+/// A parsed `reminders` subcommand ready for dispatch.
+enum RemindersCommand {
+    case list(ReminderListOptions)
+    case add(ReminderAddOptions)
+    case done(ReminderSelector)
+    case reopen(ReminderSelector)
+    case remove(ReminderSelector)
+    case edit(ReminderEditOptions)
+}
+
+/// Options for the `reminders list` subcommand.
+struct ReminderListOptions {
+    let includeCompleted: Bool
+    let listName: String?
+}
+
+/// Options for the `reminders add` subcommand.
+struct ReminderAddOptions {
+    let title: String
+    let dueInput: String?
+    let listName: String?
+    let notes: String?
+    let priority: Int?
+}
+
+/// Targets a reminder by `id` or by unique `title` match.
+enum ReminderSelector {
+    case id(String)
+    case title(String)
+}
+
+/// Options for the `reminders edit` subcommand. Only non-nil fields are applied as updates.
+struct ReminderEditOptions {
+    let id: String
+    let title: String?
+    let dueInput: String?
+    let clearDue: Bool
+    let listName: String?
+    let notes: String?
+    let clearNotes: Bool
+    let priority: Int?
 }
 
 /// Supported recurrence patterns for recurring events.

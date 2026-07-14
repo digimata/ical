@@ -1,12 +1,13 @@
 # ical
 
-Minimal macOS calendar CLI built with Swift + EventKit.
+Minimal macOS calendar and reminders CLI built with Swift + EventKit.
 
 ## Requirements
 
 - macOS
 - Swift toolchain (SwiftPM)
 - Calendar access permission (prompted on first run)
+- Reminders access permission (prompted on first `reminders` command; separate from calendar access)
 
 ## Install
 
@@ -85,7 +86,7 @@ Options:
 - `--title <text>` (required)
 - `--start <datetime>` (required)
 - `--end <datetime>` (required)
-- `--calendar <name>` (optional, defaults to first writable calendar)
+- `--calendar <name>` (optional, defaults to your default calendar)
 - `--location <text>` (optional)
 - `--notes <text>` (optional)
 - `--all-day` (optional)
@@ -133,6 +134,65 @@ Edit supports these optional flags:
 - `--recurrence-end <date>` (requires `--recurrence`)
 - `--clear-recurrence`
 - `--this-only` or `--all-future` (required when editing a recurring event)
+
+## Reminders
+
+### List reminders
+
+```bash
+ical reminders                      # incomplete reminders, sorted by due date
+ical reminders list --all           # include completed reminders
+ical reminders list --list "Groceries"
+```
+
+If no reminders exist, it prints `No reminders.`
+
+### Add reminder
+
+```bash
+ical reminders add \
+  --title "Buy oat milk" \
+  --due "tomorrow 09:00" \
+  --list "Groceries" \
+  --notes "The barista kind" \
+  --priority 1
+```
+
+Options:
+
+- `--title <text>` (required)
+- `--due <datetime>` (optional; a date-only value like `2026-07-20` sets a day-granularity due date, a datetime also creates an alarm so the reminder notifies)
+- `--list <name>` (optional, defaults to your default reminders list)
+- `--notes <text>` (optional)
+- `--priority <0-9>` (optional; 0 = none, 1 = high, 5 = medium, 9 = low)
+
+### Complete / reopen / remove
+
+```bash
+ical reminders done --title "Buy oat milk"
+ical reminders reopen --id "<reminder-id>"
+ical reminders remove --id "<reminder-id>"
+```
+
+Each takes `--id` or `--title`. A `--title` selector must uniquely match one incomplete reminder; use `--id` (printed by `add`) to disambiguate.
+
+### Edit reminder
+
+```bash
+ical reminders edit \
+  --id "<reminder-id>" \
+  --title "Updated title" \
+  --due "2026-07-20 17:00" \
+  --priority 5
+```
+
+Edit supports these optional flags:
+
+- `--title`, `--due`, `--list`, `--notes`, `--priority`
+- `--clear-due`
+- `--clear-notes`
+
+Changing or clearing the due date also replaces or removes the reminder's alarm.
 
 ## Datetime formats
 

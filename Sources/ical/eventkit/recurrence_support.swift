@@ -64,7 +64,7 @@ extension ICalApp {
             return .failure(.message("Could not parse --recurrence-end value: \(input)"))
         }
 
-        guard isDateOnlyInput(input) else {
+        guard dateParser.isDateOnly(input) else {
             return .success(parsedDate)
         }
 
@@ -77,10 +77,5 @@ extension ICalApp {
         }
 
         return .success(inclusiveEnd)
-    }
-
-    private func isDateOnlyInput(_ input: String) -> Bool {
-        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil
     }
 }

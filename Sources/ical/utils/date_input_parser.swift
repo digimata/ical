@@ -123,7 +123,9 @@ struct DateInputParser {
         return (hour, minute)
     }
 
-    private func isDateOnly(_ input: String) -> Bool {
-        input.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil
+    /// Returns `true` if the trimmed input is a date-only string (`yyyy-MM-dd`) with no time component.
+    func isDateOnly(_ input: String) -> Bool {
+        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil
     }
 }
