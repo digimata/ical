@@ -52,7 +52,8 @@ extension ICalApp {
         }
     }
 
-    /// Resolves a writable calendar by name, falling back to the first writable calendar if no name is given.
+    /// Resolves a writable calendar by name, falling back to the user's default calendar
+    /// (or the first writable calendar) if no name is given.
     /// - Parameter name: Optional calendar name (case-insensitive match).
     /// - Returns: The matched `EKCalendar`, or a `CLIError` if none found.
     func writableCalendar(named name: String?) -> Result<EKCalendar, CLIError> {
@@ -63,6 +64,10 @@ extension ICalApp {
         }
 
         guard let name = nonEmpty(name) else {
+            if let defaultCalendar = store.defaultCalendarForNewEvents,
+                defaultCalendar.allowsContentModifications {
+                return .success(defaultCalendar)
+            }
             return .success(writableCalendars[0])
         }
 
