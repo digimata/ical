@@ -23,7 +23,7 @@ struct ICalApp {
         self.calendar = calendar
         self.parser = parser
         self.dateParser = DateInputParser(calendar: calendar)
-        self.renderer = EventRenderer()
+        self.renderer = EventRenderer(calendar: calendar)
     }
 
     /// Parses CLI arguments, requests calendar access, and dispatches to the matched command handler.
